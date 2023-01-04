@@ -1,4 +1,8 @@
 # Jogo Baseado no BlackJack
+
+##Compilador
+
+Foi utilizada a linguagem python e o seu compilador ply para realizar o jogo
  
 ## ÁRVORE DE DERIVAÇÃO 
 ![arvore_derivacao](https://user-images.githubusercontent.com/82409861/210656637-d360806e-d0fa-4bdd-ba5d-fe10aaf5e6a9.jpeg)
