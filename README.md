@@ -1,6 +1,6 @@
 # Jogo Baseado no BlackJack
 
-##Compilador
+## Compilador
 
 Foi utilizada a linguagem python e o seu compilador ply para realizar o jogo
  
