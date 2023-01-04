@@ -17,7 +17,7 @@ t_EQUALS = r'\='
 # --- CARACTERES IGNORADOS --- #
 t_ignore = r''
 
-# --- VALIDAÇÕES COM REGEX --- #
+# --- EXPRESSÕES REGULARES DOS TOKENS --- #
 def t_INT(t):
     r'\d+'
     t.value = int(t.value)
@@ -32,26 +32,23 @@ def t_error(t):
     print("Illegal characters!")
     t.lexer.skip(1)
 
-lexer = lex.lex() # Recebe o analisador lexico responsável por ler os tokens
+# Recebe o analisador lexico responsável por ler os tokens
+lexer = lex.lex() 
 
-# Remove os warnings de shift/reduce conflicts do terminal
+# Determina a ordem das operações aritméticas e remove os warnings de shift/reduce conflicts do terminal
 precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'MULTIPLY', 'DIVIDE')
 )
 
-# Recebe dados na entrada do analisador lexico
-# lexer.input("1+2")
-# lexer.input("abc=123")
-
-# --- Funções de Parser --- #
-# Obs: Precisa escrever expression, empty corretamente, senão gera um erro no yacc
-def p_calc(p):
+# --- Funções de REGRAS GRAMATICAIS --- #
+# Obs: Se a sintaxe passada pelo analisador não se identificar com as regras abaixo, a função p_error é acionada
+def p_print(p):
     '''
-    calc : E
-         | empty
+    print : E
+          | empty
     '''
-    print(run(p[1])) # Função que roda a expressão
+    print(run(p[1])) # Função que roda o cálculo
 
 def p_E(p):
     '''
@@ -78,7 +75,7 @@ def p_S(p):
     # p3 = Segunda expressão
 
     # print('---------------')
-    # print(f'S: {p[1]}, {p[2]}, {p[3]}')
+    # print(f'S: {p[2]}, {p[1]}, {p[3]}')
     # print('---------------')
     p[0] = (p[2], p[1], p[3])
 
@@ -111,48 +108,70 @@ def p_empty(p):
     '''
     p[0] = None
 
-# Converte as expressões
+# Útil para enviar as frases para executar no analisador
 parser = yacc.yacc()
 
 env = {} # Guarda as variáveis
 
-# Função que roda a expressão
+# Função que roda as operações feitas no analisador
 def run(p):
     global env
 
-    if type(p) == tuple: # Se for uma tupla, então é uma expressão
+    # Se for uma tupla, então é uma expressão
+    if type(p) == tuple: 
 
-        #print(f'RUN: {p[1]} {p[0]} {p[2]}')
+        #print(f'RUN: {p}')
         if p[0] == '+':
             return run(p[1]) + run(p[2])
         elif p[0] == '-':
             return run(p[1]) - run(p[2])
         elif p[0] == '=':
-            env[p[1]] = run(p[2]) # env['nome_variavel_p[1]'] = numero
+            env[p[1]] = run(p[2]) # env['nome_variavel'] = numero
             #print(env)
     else: # Se não for uma tupla de uma expressão, retorne apenas o valor existente
         return p
 
-# Le todos os tokens
+
 def main():
-    buying_cards = True
+    buying_cards = True # Indica se o jogador quer comprar mais cartas ou não
     dealer_cards = []
     player_cards = []
+    total_points = 21
 
-    while sum(dealer_cards) < 17:
+    change_total_points = input('Deseja mudar o total de 21 pontos de cartas? (s/n): ')
+
+    if change_total_points == 's': # Se quer alterar o valor 21 do total de pontos
+        total_points_value = input('Digite um novo valor de pontos totais: ')
+
+        if total_points_value.isdigit():
+            total_points = int(total_points_value)
+            print(f'Regra definida para {total_points} pontos totais')
+        else:
+            print('Erro: Opção inválida. Portanto a regra continuará sendo 21 pontos totais')
+
+    elif change_total_points == 'n':  # Se não quer alterar o valor 21 do total de pontos
+        print('Regra permanecida como 21 pontos totais')
+    else:  # Em caso de caracteres diferentes de s/n
+        print('Erro: Opção inválida. Portanto a regra continuará sendo 21 pontos totais')
+
+    # Compra cartas para o Dealer até sua pontuação estiver perto do total
+    while sum(dealer_cards) < total_points - 4:
         dealer_cards.append(random.randint(2, 11))
 
     print("Cartas do Dealer: ", dealer_cards)       
 
-    d_expression = 'dealer=21-'
+    # Monta a sentença do cálculo da diferença entre o total e os pontos do Dealer
+    d_expression = f'dealer={total_points}-'
     for i in range(len(dealer_cards)):
         if i == 0:
             d_expression += f'{dealer_cards[i]}'
         else:
             d_expression += f'+{dealer_cards[i]}'
 
+    # Envia a sentença para o analisador
     parser.parse(d_expression)
 
+    # Sorteia uma primeira carta para o Player antes do jogo começar
     player_cards.append(random.randint(2, 11))
 
     while buying_cards:
@@ -164,7 +183,8 @@ def main():
         elif option == 'n':
             buying_cards = False
             
-            p_expression = 'player=21-'
+            # Monta a sentença do cálculo da diferença entre o total e os pontos do Player
+            p_expression = f'player={total_points}-'
             for i in range(len(player_cards)):
                 if i == 0:
                     p_expression += f'{player_cards[i]}'
@@ -173,18 +193,19 @@ def main():
                     p_expression += f'+{player_cards[i]}'
                     #print(f'p_expression: {p_expression}')
 
-            parser.parse(p_expression) # Vai chamar as funçoes de parser passando este input
+            parser.parse(p_expression) # Envia a sentença para o analisador
 
             #print(f'ENV: {env}')
             print('\n------------------------------------------')
             print('Resultado:\n')
 
+            # Verifica o possível resultado do jogo e exibe ao jogador
             if env['dealer'] < 0 and env['player'] < 0:
-                print('A pontuação de ambos foi maior que 21. Ocorreu um empate!!!')
+                print(f'A pontuação de ambos foi maior que {total_points}. Ocorreu um empate!!!')
             elif env['dealer'] < 0 and env['player'] >= 0:
-                print('A pontuação do Dealer foi maior que 21. Você ganhou!!!')
+                print(f'A pontuação do Dealer foi maior que {total_points}. Você ganhou!!!')
             elif env['dealer'] >= 0 and env['player'] < 0:
-                print('A sua pontuação foi maior que 21. Você perdeu!!!')
+                print(f'A sua pontuação foi maior que {total_points}. Você perdeu!!!')
             
             elif env['dealer'] < env['player']:
                 print('A pontuação do dealer foi maior. Você perdeu!!!')

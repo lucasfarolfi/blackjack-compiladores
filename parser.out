@@ -7,9 +7,9 @@ Unused terminals:
 
 Grammar
 
-Rule 0     S' -> calc
-Rule 1     calc -> E
-Rule 2     calc -> empty
+Rule 0     S' -> print
+Rule 1     print -> E
+Rule 2     print -> empty
 Rule 3     E -> R EQUALS S
 Rule 4     R -> ID
 Rule 5     S -> L MINUS F
@@ -36,16 +36,16 @@ F                    : 5 6
 L                    : 5 6 7
 R                    : 3
 S                    : 3
-calc                 : 0
 empty                : 2
+print                : 0
 
 Parsing method: LALR
 
 state 0
 
-    (0) S' -> . calc
-    (1) calc -> . E
-    (2) calc -> . empty
+    (0) S' -> . print
+    (1) print -> . E
+    (2) print -> . empty
     (3) E -> . R EQUALS S
     (9) empty -> .
     (4) R -> . ID
@@ -53,29 +53,29 @@ state 0
     $end            reduce using rule 9 (empty -> .)
     ID              shift and go to state 5
 
-    calc                           shift and go to state 1
+    print                          shift and go to state 1
     E                              shift and go to state 2
     empty                          shift and go to state 3
     R                              shift and go to state 4
 
 state 1
 
-    (0) S' -> calc .
+    (0) S' -> print .
 
 
 
 state 2
 
-    (1) calc -> E .
+    (1) print -> E .
 
-    $end            reduce using rule 1 (calc -> E .)
+    $end            reduce using rule 1 (print -> E .)
 
 
 state 3
 
-    (2) calc -> empty .
+    (2) print -> empty .
 
-    $end            reduce using rule 2 (calc -> empty .)
+    $end            reduce using rule 2 (print -> empty .)
 
 
 state 4
